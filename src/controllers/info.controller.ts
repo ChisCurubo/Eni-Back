@@ -13,11 +13,30 @@ class InfoController{
             return res.status(500).json(null)
         }
         }catch (error) {
-            console.error("Error en getCitasWithPatientsAndDoctorsByCC:", error);
+            console.error("Error en Obtener informacion de la base de datos:", error);
             if (error instanceof NotFoundError) {
             return res.status(404).json({ message: error.message });
             }
-            return res.status(500).json({ message: "Error al obtener citas con pacientes y doctores." });
+            return res.status(500).json({ message: "Error al Obtener informacion de la base de datos" });
+        }
+                 
+    }
+
+    public async getDetailsInfo (req: Request, res: Response){
+        try{
+        const { storeName, storeCode, postDate } = req.body;
+        const respu = await InfoService.getDetailSellDate(storeName, storeCode, postDate)
+        if(respu != null){
+            return res.status(200).json(respu)
+        }else{
+            return res.status(500).json(null)
+        }
+        }catch (error) {
+            console.error("Error en Obtener informacion de la base de datos:", error);
+            if (error instanceof NotFoundError) {
+            return res.status(404).json({ message: error.message });
+            }
+            return res.status(500).json({ message: "Error al Obtener informacion de la base de datos" });
         }
                  
     }

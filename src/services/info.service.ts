@@ -78,6 +78,67 @@ class InfoService{
       }
     }
 
+    public async getDetailSellDate(storeName: string, storeCode: string, postDate: string) {
+      try {
+        // Usamos await para esperar a que se resuelva el pool
+        const pool = await connectToDatabase(); // Esperamos que el pool se resuelva
+        const connection = await pool.getConnection(); // Obtenemos una conexión del pool
+    
+
+        console.log('Conexión obtenida desde el pool');
+    
+        // Realizar operaciones con la conexión...
+        const query = `
+          SELECT 
+              TRUNC(d.INVC_POST_DATE) AS INVC_POST_DATE,
+              s.STORE_NAME, 
+              s.STORE_CODE, 
+              d.DOC_NO,
+              d.BT_FIRST_NAME,
+              d.BT_LAST_NAME,
+              d.TRACKING_NO,
+              d.POS_FLAG1,
+              d.TRANSACTION_TOTAL_AMT,
+              d.EXTERNAL_TRANSFER_STATUS
+          FROM RPS.Store s
+          INNER JOIN RPS.DOCUMENT d ON s.SID = d.STORE_SID
+          WHERE 
+              d.status = 4 
+              AND s.STORE_NAME = '${storeName}'
+              AND s.STORE_CODE = '${storeCode}'
+              AND TRUNC(d.INVC_POST_DATE) = TRUNC(TO_DATE('${postDate}', 'DD/MM/YY'))
+          ORDER BY 
+              TRUNC(d.INVC_POST_DATE) DESC
+        `;
+        
+        // Ejecutar la consulta con los parámetros
+        const result: any = await connection.execute(query);
+    
+        const jsonResponse = result.rows.map((row: any) => ({
+          sellDate: row[0],
+          storeName: row[1],
+          storeCode: row[2],
+          docNo: row[3],
+          btName: `${row[4]} ${row[5]}`,
+          traking: row[6],
+          pos_flag: row[7],
+          transaction: row[8],
+          external: row[9],
+        }));
+    
+        console.log('Resultado en JSON:', jsonResponse);
+    
+        // Liberar la conexión de vuelta al pool
+        await connection.close();
+    
+        return jsonResponse;
+      } catch (error) {
+        throw new DatabaseError('Error al obtener informacion del HQ');
+      }
+    }
+    
+    
+
     public async getControllerInfo(){
       try{
         // Usamos await para esperar a que se resuelva el pool
